@@ -16,8 +16,6 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
-          # The brands check passes once home-assistant/brands has custom_integrations/eufy_omni
-          ignore: brands
 
   hassfest:
     name: hassfest
