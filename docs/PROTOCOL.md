@@ -100,6 +100,7 @@ modules are `eufy_omni_cloud/pb/`.
 | Mop drying cycle | reported as `WorkStatus.state = CLEANING` with `station.washing_drying_system.state = 1`; mapped to activity `docked`, dock activity `drying` |
 | Login from a second client (Home Assistant) within minutes of the probes | refused twice (as `invalid_auth`, not 429), succeeded ~5 min later. Treat repeated logins as the enemy: persist the session. |
 | Home Assistant integration | config flow, 30 entities per robot, push updates and the Locate button all verified live on 2026-10-17 |
+| Write dp 152 = `ModeCtrlRequest{START_SCENE_CLEAN, scene_id}` via `eufy_omni.start_scene` | full cycle observed by push: dock washing (2 min) → CLEANING → GO_HOME → docked collecting dust → washing → drying; CleanStatistics and consumables updated on return |
 
 ## 6. Compatibility notes
 
