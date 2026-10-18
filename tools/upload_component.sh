@@ -38,8 +38,14 @@ done
 count=0
 while IFS= read -r f; do
   rel="${f#./}"
-  resp=$(curl -s -b "ingress_session=$SESSION" -X POST "$API/save" \
-      --data-urlencode "filename=$BASE/$rel" --data-urlencode "text@$f")
+  case "$rel" in
+    *.png)  # binary: multipart upload into the parent folder
+      resp=$(curl -s -b "ingress_session=$SESSION" -X POST "$API/upload" \
+          -F "path=$BASE/$(dirname "$rel")" -F "file=@$f;filename=$(basename "$rel");type=image/png") ;;
+    *)
+      resp=$(curl -s -b "ingress_session=$SESSION" -X POST "$API/save" \
+          --data-urlencode "filename=$BASE/$rel" --data-urlencode "text@$f") ;;
+  esac
   case "$resp" in
     *'"error": true'*|'') echo "FAILED $rel: $resp"; exit 1 ;;
   esac

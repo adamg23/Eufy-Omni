@@ -1,4 +1,4 @@
-<p align="center"><img src="brands/eufy_omni/icon@2x.png" width="160" alt="Eufy Omni C28"></p>
+<p align="center"><img src="custom_components/eufy_omni/brand/icon@2x.png" width="160" alt="Eufy Omni C28"></p>
 
 # Eufy Omni C28 for Home Assistant
 
@@ -32,16 +32,14 @@ protobuf-encoded data points. No polling in normal operation.
 
 ## Icon
 
-`brands/eufy_omni/` holds the 256 px and 512 px icons in the layout the
-[home-assistant/brands](https://github.com/home-assistant/brands) repository expects under
-`custom_integrations/eufy_omni/`. Home Assistant and HACS fetch integration icons from that
-repository, so the icon appears in the UI once that pull request is merged.
+The integration ships its own icon in `custom_components/eufy_omni/brand/` (`icon.png`,
+`icon@2x.png`). Home Assistant 2026.3 and newer serve it locally; older versions show the
+generic placeholder.
 
-## Privacy
+## Licence
 
-Your credentials are stored only in Home Assistant's config entry. Nothing is sent anywhere
-except Eufy's own cloud. The test fixtures in this repository are scrubbed: no serials, tokens,
-network details, time zone or routine names.
+MIT for everything in this repository except the protobuf schemas under `proto/cloud/`,
+which keep their upstream licence (`proto/LICENSE-eufy-clean-protos.md`).
 
 ## Notes
 

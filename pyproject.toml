@@ -1,6 +1,6 @@
 [project]
 name = "eufy-omni-cloud"
-version = "1.0.0"
+version = "1.0.1"
 description = "Eufy Clean cloud client (MQTT + protobuf) for Omni-series robot vacuums, and a Home Assistant integration built on it"
 readme = "README.md"
 requires-python = ">=3.13"
