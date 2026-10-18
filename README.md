@@ -36,6 +36,22 @@ The integration ships its own icon in `custom_components/eufy_omni/brand/` (`ico
 `icon@2x.png`). Home Assistant 2026.3 and newer serve it locally; older versions show the
 generic placeholder.
 
+## Credits
+
+This integration would not exist without the people who worked out how the eufy app talks to
+Eufy's cloud:
+
+* [martijnpoppen/eufy-clean](https://github.com/martijnpoppen/eufy-clean) by Martijn Poppen –
+  the original reverse engineering of the Eufy Clean cloud: login flow, the AIoT backend, the
+  MQTT certificate hand-out, topic layout and message envelope, and the protobuf schemas that
+  describe the robot's data points. The schemas under `proto/cloud/` are his work, reused under
+  his licence (`proto/LICENSE-eufy-clean-protos.md`).
+* [jeppesens/eufy-clean](https://github.com/jeppesens/eufy-clean) – the Python port of that
+  work, which served as a reference for the data point numbering and message handling.
+
+The client library and the Home Assistant component in this repository are an independent
+implementation written from that knowledge; no code from either project is included.
+
 ## Licence
 
 MIT for everything in this repository except the protobuf schemas under `proto/cloud/`,
