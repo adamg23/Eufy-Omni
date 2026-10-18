@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+# raw captures may contain serials, tokens or certificates; only sanitized fixtures are committed
+captures/
+*.raw.json
+.env
+.deploy_tmp/

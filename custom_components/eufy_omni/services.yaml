@@ -1,0 +1,33 @@
+start_scene:
+  target:
+    entity:
+      domain: vacuum
+      integration: eufy_omni
+  fields:
+    scene_id:
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box
+    scene_name:
+      selector:
+        text:
+
+start_rooms:
+  target:
+    entity:
+      domain: vacuum
+      integration: eufy_omni
+  fields:
+    room_ids:
+      required: true
+      selector:
+        object:
+    map_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box

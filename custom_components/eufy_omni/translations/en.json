@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eufy Clean account",
+        "description": "Sign in with the account you use in the Eufy Clean / eufy app. All robots on the account are added.",
+        "data": { "username": "Email", "password": "Password" }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "The password for {username} was rejected. Enter the current password.",
+        "data": { "password": "Password" }
+      }
+    },
+    "error": {
+      "invalid_auth": "Login was rejected. Check the email and password.",
+      "cannot_connect": "Could not reach the Eufy cloud (it rate-limits logins; wait a few minutes and try again).",
+      "no_robot": "No MQTT-capable robot vacuum is bound to this account.",
+      "unknown": "Unexpected error; see the log."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication succeeded."
+    }
+  },
+  "services": {
+    "start_scene": {
+      "name": "Start scene",
+      "description": "Start one of the cleaning scenes defined in the Eufy app.",
+      "fields": {
+        "scene_id": { "name": "Scene ID", "description": "Numeric scene id (see the vacuum's scenes attribute)." },
+        "scene_name": { "name": "Scene name", "description": "Scene name as shown in the app." }
+      }
+    },
+    "start_rooms": {
+      "name": "Clean rooms",
+      "description": "Clean specific rooms of a map.",
+      "fields": {
+        "room_ids": { "name": "Room IDs", "description": "List of room ids in cleaning order." },
+        "map_id": { "name": "Map ID", "description": "Id of the map the rooms belong to." }
+      }
+    }
+  },
+  "entity": {
+    "vacuum": {
+      "robot": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": { "quiet": "Quiet", "standard": "Standard", "turbo": "Turbo", "max": "Max", "max_plus": "Max+" }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "state": {
+        "name": "State",
+        "state": {
+          "idle": "Idle", "cleaning": "Cleaning", "paused": "Paused", "returning": "Returning to dock",
+          "docked": "Docked", "error": "Error", "mapping": "Mapping", "remote_control": "Remote control", "unknown": "Unknown"
+        }
+      },
+      "dock_activity": {
+        "name": "Dock activity",
+        "state": {
+          "idle": "Idle", "washing": "Washing mop", "drying": "Drying mop", "collecting_dust": "Emptying dust",
+          "adding_water": "Adding water", "recycling_water": "Recycling water"
+        }
+      },
+      "clean_water": { "name": "Clean water" },
+      "error_code": { "name": "Error code" },
+      "last_clean_area": { "name": "Last clean area" },
+      "last_clean_duration": { "name": "Last clean duration" },
+      "total_clean_count": { "name": "Total cleans" },
+      "total_clean_area": { "name": "Total area cleaned" },
+      "total_clean_duration": { "name": "Total cleaning time" },
+      "wifi_signal": { "name": "Wi-Fi signal" },
+      "last_update": { "name": "Last update" },
+      "consumable_side_brush": { "name": "Side brush used" },
+      "consumable_rolling_brush": { "name": "Roller brush used" },
+      "consumable_filter_mesh": { "name": "Filter used" },
+      "consumable_scrape": { "name": "Scraper used" },
+      "consumable_sensor": { "name": "Sensors since cleaning" },
+      "consumable_mop": { "name": "Mop used" },
+      "consumable_dustbag": { "name": "Dust bag used" },
+      "consumable_dirty_waterfilter": { "name": "Dirty water filter used" }
+    },
+    "binary_sensor": {
+      "docked": { "name": "Docked" },
+      "dock_connected": { "name": "Dock connected" },
+      "online": { "name": "Online" },
+      "push_connected": { "name": "Push connection" },
+      "do_not_disturb": { "name": "Do not disturb" }
+    },
+    "button": {
+      "locate": { "name": "Locate" },
+      "refresh": { "name": "Refresh" },
+      "wash_mop": { "name": "Wash mop" }
+    },
+    "select": {
+      "clean_type": {
+        "name": "Cleaning mode",
+        "state": { "sweep_only": "Vacuum", "mop_only": "Mop", "sweep_and_mop": "Vacuum and mop", "sweep_then_mop": "Vacuum then mop" }
+      },
+      "mop_level": { "name": "Water level", "state": { "low": "Low", "middle": "Medium", "high": "High" } },
+      "clean_extent": { "name": "Cleaning intensity", "state": { "normal": "Normal", "narrow": "Thorough", "quick": "Quick" } }
+    },
+    "number": {
+      "volume": { "name": "Volume" }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "<str:16>",
+    "sn": "<str:0>",
+    "name": "<str:12>",
+    "alias_name": "<str:5>",
+    "bluetooth": null,
+    "wifi": {
+      "mac": "<str:17>",
+      "wifi_ssid": "<str:0>",
+      "lan_ip_addr": ""
+    },
+    "product": {
+      "id": "<str:36>",
+      "name": "<str:12>",
+      "region": "[{\"regions\":[\"ALL\"],\"date\":\"2022-09-01 20:22:49\"}]",
+      "default_name": "<str:7>",
+      "icon_url": "https://d3pkbgk01oouhl.cloudfront.net/product/prod/1733802663521061_img_robovac_select_t23512x.png",
+      "category": "Home",
+      "appliance": "Cleaning",
+      "connect_type": 2,
+      "description": "T2182 eufy RoboVac L80, connected via EufyHome",
+      "product_code": "T2351",
+      "wifi_ssid_prefix": "<str:23>",
+      "wifi_ssid_prefix_full": "<str:24>",
+      "index": 2,
+      "create_time": 1640585895,
+      "update_time": 1755596277,
+      "is_show": false,
+      "tuya_pid": "eqjjicnai45fqzom",
+      "app_ble_ssid_prefix": "<str:24>",
+      "device_ble_ssid_prefix": "<str:20>",
+      "wifi_ssid_prefix_list": [
+        "eufy Clean X10 Omni-",
+        "eufy Clean X10 Pro Omni-",
+        "eufy X10A-"
+      ],
+      "device_ble_ssid_prefix_list": [
+        "eufy Clean X10 Omni-",
+        "eufy Clean X10 Pro Omni-",
+        "eufy X10A-"
+      ],
+      "is_additional": false,
+      "is_enable_whitelist": false,
+      "is_only_mega": false
+    },
+    "user_id": "<str:40>",
+    "owner_info": null,
+    "home_id": "<str:36>",
+    "home_name": "<str:0>",
+    "room_id": "<str:36>",
+    "room_name": "<str:12>",
+    "connect_type": 2,
+    "grant_by": 0,
+    "software_version": "",
+    "index": 1,
+    "device_key": "<str:0>",
+    "create_time": 1729882321,
+    "update_time": 1729898427,
+    "hardware_version": "",
+    "scale_type": "",
+    "member_type": 2,
+    "user_center_user_id": "<str:40>",
+    "is_not_work": false,
+    "local_code": "",
+    "needUpdate": false,
+    "setting": {
+      "id": "<str:0>",
+      "device_id": "<str:0>",
+      "is_default": true
+    },
+    "update_packages": [],
+    "update_version": {
+      "mcu": "",
+      "wifi": "<str:0>",
+      "ble": "",
+      "res": ""
+    },
+    "current_version": {
+      "mcu": "",
+      "wifi": "<str:0>",
+      "ble": "",
+      "res": ""
+    }
+  }
+]

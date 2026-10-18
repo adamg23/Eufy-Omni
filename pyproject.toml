@@ -1,0 +1,23 @@
+[project]
+name = "eufy-omni-cloud"
+version = "1.0.0"
+description = "Eufy Clean cloud client (MQTT + protobuf) for Omni-series robot vacuums, and a Home Assistant integration built on it"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+dependencies = [
+    "aiohttp>=3.9",
+    "paho-mqtt>=2.0",
+    "protobuf>=5.26",
+]
+
+[project.optional-dependencies]
+map = ["lz4>=4.0"]
+test = ["pytest>=8", "pytest-asyncio>=0.23", "aioresponses>=0.7"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["eufy_omni_cloud*"]
