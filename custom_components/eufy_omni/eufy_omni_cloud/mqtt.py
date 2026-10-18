@@ -72,9 +72,12 @@ def _build_ssl_context(creds: MqttCredentials) -> ssl.SSLContext:
 class EufyMqtt:
     """One broker connection shared by all devices on the account."""
 
-    def __init__(self, creds: MqttCredentials, openudid: str) -> None:
+    def __init__(self, creds: MqttCredentials, openudid: str, *, tap_requests: bool = False) -> None:
         self._creds = creds
         self._openudid = openudid
+        # Diagnostics only: also subscribe to the request topics to see what other clients
+        # (the phone app) send the robot. Never enabled by the integration.
+        self.tap_requests = tap_requests
         self._client_id = f"android-{creds.app_name}-eufy_android_{openudid}_{creds.user_id}-{int(time.time() * 1000)}"
         self._loop: asyncio.AbstractEventLoop | None = None
         self._client: mqtt.Client | None = None
@@ -161,7 +164,10 @@ class EufyMqtt:
     # paho thread; hop to the loop with call_soon_threadsafe.
 
     def _subscribe(self, client: mqtt.Client, model: str, sn: str) -> None:
-        client.subscribe([(TOPIC_CMD_RES.format(model=model, sn=sn), 0), (TOPIC_BIZ_RES.format(model=model, sn=sn), 0)])
+        topics = [(TOPIC_CMD_RES.format(model=model, sn=sn), 0), (TOPIC_BIZ_RES.format(model=model, sn=sn), 0)]
+        if self.tap_requests:
+            topics += [(TOPIC_CMD_REQ.format(model=model, sn=sn), 0), (TOPIC_BIZ_RES.format(model=model, sn=sn)[:-3] + "req", 0)]
+        client.subscribe(topics)
 
     def _on_connect(self, client: mqtt.Client, _ud: Any, _flags: Any, reason: Any, _props: Any = None) -> None:
         code = getattr(reason, "value", reason)
@@ -193,7 +199,7 @@ class EufyMqtt:
         parts = msg.topic.split("/")
         if len(parts) != 5:
             return
-        kind, _, model, sn, _ = parts
+        kind, _, model, sn, direction = parts
         cbs = self._devices.get((model, sn))
         if cbs is None:
             return
@@ -201,7 +207,7 @@ class EufyMqtt:
         payload = bytes(msg.payload)
         if on_raw is not None:
             self._post(lambda: _maybe_await(on_raw(msg.topic, payload)))
-        if kind != "cmd" or on_dps is None:
+        if kind != "cmd" or direction != "res" or on_dps is None:
             return
         dps = parse_status_envelope(payload)
         if dps:

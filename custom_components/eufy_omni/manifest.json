@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/adamg23/Eufy-Omni/issues",
   "loggers": ["custom_components.eufy_omni", "eufy_omni_cloud"],
   "requirements": ["paho-mqtt>=2.1.0", "protobuf>=5.26"],
-  "version": "1.0.2"
+  "version": "1.1.0"
 }

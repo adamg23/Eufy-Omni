@@ -9,7 +9,7 @@ protobuf-encoded data points. No polling in normal operation.
 
 * `eufy_omni_cloud/` – standalone async client (aiohttp + paho-mqtt + protobuf).
 * `custom_components/eufy_omni/` – the integration: vacuum, sensors, binary sensors,
-  buttons, selects, volume, services `eufy_omni.start_scene` / `eufy_omni.start_rooms`.
+  buttons, selects, volume, a map camera, services `eufy_omni.start_scene` / `eufy_omni.start_rooms`.
 * `proto/cloud/` – message schemas extracted from the Eufy app by Martijn Poppen
   (licence in `proto/LICENSE-eufy-clean-protos.md`). Compile with `tools/build_protos.py`.
 * `docs/PROTOCOL.md` – what the protocol looks like and what has been verified live.
@@ -51,7 +51,7 @@ make different trade-offs; this table is written against each project's own docu
 | Routines ("scenes") | `eufy_omni.start_scene` by name or id; routine list exposed as an attribute | `scene_clean` via `vacuum.send_command`, plus a scene select entity | – |
 | Room cleaning | `eufy_omni.start_rooms` (room ids + map id) | `room_clean` with per-room fan speed, mode and water level | – |
 | Zone cleaning | – | `zone_clean` with rectangle coordinates and a bundled zone-drawing card | – |
-| Live map | – (planned; the `biz/` map stream is received but not decoded) | Yes, as a camera entity: rooms, no-go zones, robot position, trail | – |
+| Live map | Yes, as a camera entity: rooms, walls, no-go zones, dock, robot position and path; fetched on demand from a docked robot | Yes, as a camera entity: rooms, no-go zones, robot position, trail | – |
 | Sensors | battery, state, dock activity, clean-water level, error code, last/total clean area, duration and count, Wi-Fi signal, last update, 8 consumable hour counters | battery, charging, work status and mode, cleaning area, lifetime totals, dock firmware, error code, consumable life, active map id | battery, cleaning status, error reporting |
 | Binary sensors | charging, docked, dock connected, online, push connection, problem, do-not-disturb | charging | – |
 | Selects / numbers | cleaning mode, water level, cleaning intensity; volume | suction, cleaning mode, water level, mop intensity, cleaning intensity, voice language, dock settings | – |
@@ -63,8 +63,7 @@ make different trade-offs; this table is written against each project's own docu
 In short: if you have a Tuya-era RoboVac, use **damacus/robovac**. If you have an Omni-generation
 robot and want the live map, zone cleaning or consumable resets today, **jeppesens/eufy-clean**
 has them. This project aims at a small, push-driven, well-tested core for the same robots, with
-richer dock and consumable state and routines by name; the map is the main gap and is next on
-the list.
+richer dock and consumable state, routines by name and a map that can be refreshed on demand.
 
 ## Credits
 
@@ -91,6 +90,7 @@ which keep their upstream licence (`proto/LICENSE-eufy-clean-protos.md`).
 
 * Eufy rate-limits logins (HTTP 429). The integration stores its session token and only logs
   in again when the token is rejected.
-* The live map stream (`biz/` topic) is not rendered yet.
+* The map is requested from the robot at start-up, when a clean begins and from the **Refresh map**
+  button; during a run the robot streams its path and position on its own.
 * Data points 166 and 169 carry the Matter pairing code and the robot's MAC/SSID/IP; they are
   never written to fixtures or diagnostics.

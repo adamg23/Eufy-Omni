@@ -88,6 +88,8 @@ class EufyOmniVacuum(EufyOmniEntity, StateVacuumEntity):
             "error_codes": list(s.error_codes),
             "warning_codes": list(s.warning_codes),
             "scenes": {sc.name: sc.id for sc in s.scenes if sc.valid},
+            "map_id": self.robot.map.map_id or None,
+            "rooms": {r.id: r.label for r in self.robot.map.rooms.values()},
             "push_connected": s.push_connected,
         }
 

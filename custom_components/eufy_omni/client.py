@@ -10,6 +10,8 @@ try:
     from .eufy_omni_cloud import commands  # type: ignore[attr-defined]
     from .eufy_omni_cloud.account import EufyAccount, RobotVacuum  # type: ignore[attr-defined]
     from .eufy_omni_cloud.exceptions import EufyAuthError, EufyCloudError, EufyConnectionError  # type: ignore[attr-defined]
+    from .eufy_omni_cloud.maprender import render_png  # type: ignore[attr-defined]
+    from .eufy_omni_cloud.mapstream import RobotMap  # type: ignore[attr-defined]
     from .eufy_omni_cloud.state import (  # type: ignore[attr-defined]
         CLEAN_EXTENTS,
         CLEAN_TYPES,
@@ -24,6 +26,8 @@ except ImportError:  # development checkout
     from eufy_omni_cloud import commands
     from eufy_omni_cloud.account import EufyAccount, RobotVacuum
     from eufy_omni_cloud.exceptions import EufyAuthError, EufyCloudError, EufyConnectionError
+    from eufy_omni_cloud.maprender import render_png
+    from eufy_omni_cloud.mapstream import RobotMap
     from eufy_omni_cloud.state import (
         CLEAN_EXTENTS,
         CLEAN_TYPES,
@@ -47,7 +51,9 @@ __all__ = [
     "EufyAuthError",
     "EufyCloudError",
     "EufyConnectionError",
+    "RobotMap",
     "RobotVacuum",
     "VacuumSnapshot",
     "commands",
+    "render_png",
 ]

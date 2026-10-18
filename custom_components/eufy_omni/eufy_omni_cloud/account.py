@@ -13,12 +13,14 @@ import aiohttp
 from . import commands
 from .exceptions import EufyAuthError, EufyCloudError, EufyConnectionError
 from .http import EufyCloudHttp, MqttCredentials, Session, new_openudid
+from .mapstream import MapStream, RobotMap
 from .mqtt import EufyMqtt
 from .state import VacuumSnapshot, apply_dps
 
 _LOGGER = logging.getLogger(__name__)
 
 Listener = Callable[["RobotVacuum"], None]
+MAP_REQUEST_DELAY_S = 3.0
 
 
 def _is_protobuf_device(dps: dict[str, Any]) -> bool:
@@ -37,6 +39,9 @@ class RobotVacuum:
         self.firmware: str | None = record.get("main_sw_version")
         self.snapshot = VacuumSnapshot()
         self._listeners: list[Listener] = []
+        self.map_stream = MapStream()
+        self._map_listeners: list[Listener] = []
+        self._last_map_request = 0.0
         self.update_from_record(record)
         self.name = self._pick_name(record, account.aliases.get(self.sn))
 
@@ -65,9 +70,48 @@ class RobotVacuum:
         self._notify()
 
     def apply_push(self, dps: dict[str, Any]) -> None:
+        was_cleaning = self.snapshot.activity in ("cleaning", "returning", "mapping")
         snap = apply_dps(self.snapshot, dps)
         self.snapshot = snap.__class__(**{**snap.__dict__, "push_connected": True, "online": True})
         self._notify()
+        if not was_cleaning and self.snapshot.activity in ("cleaning", "mapping"):
+            # a run just started: the robot streams path/pose on its own, but ask for the
+            # full map so the picture starts from a known state
+            self._account.schedule_map_request(self)
+
+    @property
+    def map(self) -> RobotMap:
+        return self.map_stream.map
+
+    def apply_map_frame(self, payload: bytes) -> None:
+        """One raw biz/ frame from MQTT."""
+        try:
+            changed = self.map_stream.feed(payload)
+        except Exception:  # noqa: BLE001 - never let a bad frame kill the MQTT callback
+            _LOGGER.exception("map frame failed")
+            return
+        if changed:
+            for cb in list(self._map_listeners):
+                try:
+                    cb(self)
+                except Exception:  # noqa: BLE001
+                    _LOGGER.exception("map listener failed")
+
+    def add_map_listener(self, cb: Listener) -> Callable[[], None]:
+        self._map_listeners.append(cb)
+        return lambda: self._map_listeners.remove(cb)
+
+    async def async_request_map(self, *, min_interval: float = 5.0) -> None:
+        """Ask the robot to stream its map now (what the app does when its map opens)."""
+        now = time.monotonic()
+        if now - self._last_map_request < min_interval:
+            return
+        self._last_map_request = now
+        user_id = self._account.user_id
+        if user_id:
+            await self.async_send(commands.app_info(user_id))
+            await asyncio.sleep(0.5)
+        await self.async_send(commands.keepalive(force_sync=True))
 
     def set_push_connected(self, connected: bool) -> None:
         if self.snapshot.push_connected != connected:
@@ -162,10 +206,32 @@ class EufyAccount:
         self._poll_task: asyncio.Task[None] | None = None
         self.robots: dict[str, RobotVacuum] = {}
         self.aliases: dict[str, str] = {}
+        self._bg_tasks: set[asyncio.Task[None]] = set()
 
     @property
     def push_connected(self) -> bool:
         return self._mqtt is not None and self._mqtt.connected
+
+    @property
+    def user_id(self) -> str:
+        if self._creds is not None and self._creds.user_id:
+            return self._creds.user_id
+        return self._http.session.user_id if self._http.session else ""
+
+    def schedule_map_request(self, robot: RobotVacuum, delay: float = MAP_REQUEST_DELAY_S) -> None:
+        """Request the robot's map shortly, from any context (also MQTT callbacks)."""
+        loop = asyncio.get_event_loop()
+
+        async def _later() -> None:
+            await asyncio.sleep(delay)
+            try:
+                await robot.async_request_map()
+            except EufyCloudError as err:
+                _LOGGER.debug("map request for %s failed: %s", robot, err)
+
+        task = loop.create_task(_later())
+        self._bg_tasks.add(task)
+        task.add_done_callback(self._bg_tasks.discard)
 
     def export_session(self) -> dict[str, Any]:
         """Tokens worth persisting so the next start does not need a fresh login."""
@@ -220,13 +286,16 @@ class EufyAccount:
         self._creds = await self._http.async_mqtt_credentials()
         self._mqtt = EufyMqtt(self._creds, self.openudid)
         for robot in self.robots.values():
-            self._mqtt.add_device(robot.model, robot.sn, on_dps=self._on_dps)
+            self._mqtt.add_device(robot.model, robot.sn, on_dps=self._on_dps, on_raw=self._on_raw)
         self._mqtt.on_connection_change = self._on_connection_change
         await self._mqtt.async_start()
         try:
             await self._mqtt.async_wait_connected(20)
         except TimeoutError:
             _LOGGER.warning("MQTT not connected after 20 s; continuing with HTTP polling")
+        else:
+            for robot in self.robots.values():
+                self.schedule_map_request(robot)
         if self._poll_task is None:
             self._poll_task = asyncio.create_task(self._poll_loop())
 
@@ -242,6 +311,8 @@ class EufyAccount:
         if self._poll_task is not None:
             self._poll_task.cancel()
             self._poll_task = None
+        for task in list(self._bg_tasks):
+            task.cancel()
         if self._mqtt is not None:
             await self._mqtt.async_stop()
             self._mqtt = None
@@ -259,6 +330,13 @@ class EufyAccount:
         robot = self.robots.get(sn)
         if robot is not None:
             robot.apply_push(dps)
+
+    def _on_raw(self, topic: str, payload: bytes) -> None:
+        parts = topic.split("/")
+        if len(parts) == 5 and parts[0] == "biz" and parts[4] == "res":
+            robot = self.robots.get(parts[3])
+            if robot is not None:
+                robot.apply_map_frame(payload)
 
     def _on_connection_change(self, connected: bool) -> None:
         for robot in self.robots.values():

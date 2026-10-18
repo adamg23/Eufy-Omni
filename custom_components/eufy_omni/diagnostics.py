@@ -23,10 +23,20 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: EufyOmn
         snap = asdict(robot.snapshot)
         snap.pop("raw_dps", None)
         snap["raw_dp_keys"] = sorted(robot.snapshot.raw_dps)
+        m = robot.map
         robots[f"…{robot.sn[-4:]}"] = {
             "model": robot.model,
             "firmware": robot.firmware,
             "snapshot": snap,
+            "map": {
+                "has_map": m.has_map,
+                "map_id": m.map_id,
+                "grid": asdict(m.grid) if m.grid else None,
+                "rooms": {r.id: r.label for r in m.rooms.values()},
+                "path_points": len(m.path),
+                "channels": robot.map_stream.channel_types,
+                "frames": [robot.map_stream.frames_decoded, robot.map_stream.frames_seen],
+            },
         }
     return async_redact_data(
         {

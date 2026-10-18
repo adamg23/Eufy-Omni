@@ -14,6 +14,7 @@ BUTTONS: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(key="locate", translation_key="locate"),
     ButtonEntityDescription(key="refresh", translation_key="refresh", entity_category=EntityCategory.DIAGNOSTIC),
     ButtonEntityDescription(key="wash_mop", translation_key="wash_mop"),
+    ButtonEntityDescription(key="refresh_map", translation_key="refresh_map", entity_category=EntityCategory.DIAGNOSTIC),
 )
 
 
@@ -40,3 +41,5 @@ class EufyOmniButton(EufyOmniEntity, ButtonEntity):
             await self._entry.runtime_data.async_refresh()
         elif key == "wash_mop":
             await self.robot.async_wash_mop()
+        elif key == "refresh_map":
+            await self.robot.async_request_map(min_interval=0)

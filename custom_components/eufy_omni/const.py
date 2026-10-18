@@ -18,6 +18,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SELECT,
     Platform.NUMBER,
+    Platform.CAMERA,
 ]
 
 MODEL_NAMES: dict[str, str] = {

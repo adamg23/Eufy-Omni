@@ -100,3 +100,34 @@ def set_clean_extent(name: str) -> dict[str, Any]:
 
 def reset_consumable(reset_type: int) -> dict[str, Any]:
     return {Dp.CONSUMABLES: encode(consumable_pb2.ConsumableRequest(reset_types=[reset_type]))}
+
+
+# ----------------------------------------------------------------- map stream wake-up
+# What the phone app sends when its map screen opens (captured 2026-10-17): first an
+# AppInfo on dp 169 saying who is asking, then a KeepAliveRequest on dp 153 whose
+# timestamp is in *microseconds*; with force_sync set the robot streams every map
+# channel (map, rooms, zones, path) on biz/.../res even while docked.
+
+def app_info(user_id: str, *, app_version: str = "6.1.11") -> dict[str, Any]:
+    from .pb import app_device_info_pb2
+
+    info = app_device_info_pb2.AppInfo(
+        platform=app_device_info_pb2.AppInfo.PF_ANDROID,
+        app_version=app_version,
+        user_id=user_id,
+        data_center=app_device_info_pb2.AppInfo.AZ,
+    )
+    info.app_function.multi_maps.version = 1
+    info.app_function.multi_maps.options = 1
+    info.app_function.optimization.version = 1
+    info.app_function.optimization.options = 14
+    return {Dp.DEVICE_INFO: encode(info)}
+
+
+def keepalive(*, force_sync: bool = True, now_us: int | None = None) -> dict[str, Any]:
+    import time
+
+    from .pb import keepalive_pb2
+
+    req = keepalive_pb2.KeepAliveRequest(timestamp=now_us or int(time.time() * 1_000_000), force_sync=force_sync)
+    return {Dp.WORK_STATUS: encode(req)}

@@ -60,8 +60,8 @@ modules are `eufy_omni_cloud/pb/`.
 | 162 | pb | `LanguageResponse` **[C]** | ids 1201 |
 | 163 | int | battery % **[R]** | 100 |
 | 164 | pb | `MapEditResponse` **[C]** | empty |
-| 165 | pb | map data (`MultiMaps*`/rooms) **[?]** | 314 bytes |
-| 166 | pb | device/Matter info **[?]** – contains the Matter pairing code; never store | |
+| 165 | pb | room list (`RoomParams`-shaped: 15 × {id, scene.index}) **[C]** | 314 bytes |
+| 166 | pb | device/Matter info **[?]** – contains the Matter pairing code; never store (the reference project calls this \"map stream metadata\") | |
 | 167 | pb | `CleanStatistics` **[C]** | last 56 min / 56 m²; total 46 runs, 2219 m² |
 | 168 | pb | `ConsumableResponse` **[C]** | brushes/filter 47 h, mop 30 h, dust bag 1 |
 | 169 | pb | `DeviceInfo` **[C]** – product name, MAC, SSID, IP, user id; redact | "eufy Omni C28", 4.9.1, station 0.7.0 |
@@ -73,6 +73,38 @@ modules are `eufy_omni_cloud/pb/`.
 | 178 | pb | ? (12 bytes) | |
 | 179 | pb | telemetry, no schema **[R]** | 25 bytes |
 | 180 | pb | `SceneResponse` **[C]** | 7 scenes: 3 built-in templates (not valid until configured) + 4 user routines on map 2; names are made generic in fixtures |
+
+## 3a. Map stream (biz/ topic, "protocol 41") **[C]**
+
+Frames are JSON envelopes like the status ones; the payload is
+`{"protocol": 41, "t", "account_id", "device_sn", "app_name": "eufy_home",
+"data": {"channel_id", "clear_type", "data_type", "offset", "len", "data": "<hex>"}}`.
+`data` is `varint(len) + protobuf` for a whole message (`offset` 0) or a byte range of
+a longer stream (`offset` > 0; seen on the path channel). Channel numbers are chosen by
+the robot (`stream.proto` `Metadata.ChanIds`); on the C28 4.9.1 they were:
+
+| channel | message | content on the C28 |
+|---|---|---|
+| 2 | `Map` | 334×415 cells of 5 cm, origin (−847, −1812) cm, 2-bit cells LZ4-block-compressed (9 KB → 34 KB), `docks_v2` with the station pose |
+| 4 | `RoomOutline` | same grid, 1 byte per cell = `room_id << 2 | sub_type`, LZ4 (15 KB → 139 KB); id 32 marks cells outside any room |
+| 5 | `RoomParams` | 15 rooms, names empty (the app shows its own labels), `scene.index` = id |
+| 6 | `RestrictedZone` | walls / no-go / no-mop lists; firmware adds an unknown field 11 |
+| 8 | `TemporaryData` | current room/zone selection (map id + release only when idle) |
+| 9 | `ObstacleInfo` | map id + release, no obstacles |
+| 11 | path | back-to-back `varint(len) + PathPoint`; `xy` = two byte-swapped 16-bit sign-magnitude cm values |
+
+**Waking the stream.** A docked robot publishes nothing on `biz/` by itself, and
+`MultiMapsManageRequest{MAP_GET_ALL / MAP_GET_ONE}` on dp 172 is ignored over MQTT. What
+the phone app does when its map screen opens (captured from the `cmd/.../req` topic,
+which the broker lets a second client subscribe to):
+
+1. dp 169 = `AppInfo{platform, app_version "6.1.11", user_id, data_center AZ, app_function{multi_maps{1,1}, optimization{1,14}}}`
+2. dp 153 = `KeepAliveRequest{timestamp}` – **microseconds**, not ms
+3. dp 153 = `KeepAliveRequest{timestamp, force_sync: true}`
+
+Replaying 1 + 3 from our client made the idle robot stream channels 2, 4, 5, 6, 8, 9
+within a second (`tools/probe_map.py --wake`). The plain keepalive alone (step 2) did
+nothing in 8 s. The same keepalive sent on dps 150/171/174/175 is ignored.
 
 ## 4. Commands **[R]** (to be confirmed one by one)
 
